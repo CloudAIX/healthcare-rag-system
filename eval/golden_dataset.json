@@ -1,0 +1,12 @@
+[
+  {"id":"eval-001","question":"What are the 7 strengthened aged care quality standards?","category":"factual","difficulty":"easy"},
+  {"id":"eval-002","question":"What does Standard 1 require regarding dignity and respect?","category":"factual","difficulty":"easy"},
+  {"id":"eval-003","question":"What are the medication management requirements?","category":"clinical","difficulty":"medium"},
+  {"id":"eval-004","question":"How should a provider handle a complaint from a resident's family?","category":"governance","difficulty":"medium"},
+  {"id":"eval-005","question":"What infection prevention and control measures are required?","category":"clinical","difficulty":"medium"},
+  {"id":"eval-006","question":"What are the food and nutrition requirements under Standard 6?","category":"factual","difficulty":"easy"},
+  {"id":"eval-007","question":"How do the standards address Aboriginal and Torres Strait Islander peoples?","category":"cross-standard","difficulty":"hard"},
+  {"id":"eval-008","question":"What is the provider's responsibility for workforce governance?","category":"governance","difficulty":"medium"},
+  {"id":"eval-009","question":"What are the requirements for advance care planning?","category":"clinical","difficulty":"medium"},
+  {"id":"eval-010","question":"What is the capital of France?","category":"out_of_scope","difficulty":"easy"}
+]
