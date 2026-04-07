@@ -4,6 +4,16 @@ Production-grade Retrieval-Augmented Generation pipeline for Australian Aged Car
 
 **Built by [GVRN-AI](https://gvrn-ai.com)** — AI governance and automation for healthcare.
 
+## Dashboard
+
+| Query Interface | Evaluation Results |
+|---|---|
+| ![Query](docs/screenshots/query.png) | ![Evaluation](docs/screenshots/eval.png) |
+
+| Corpus Explorer | System Health |
+|---|---|
+| ![Corpus](docs/screenshots/corpus.png) | ![Health](docs/screenshots/health.png) |
+
 ## Architecture
 
 ```
