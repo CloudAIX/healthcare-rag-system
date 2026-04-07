@@ -94,7 +94,10 @@ class CrossEncoderReranker:
         """Normalize scores to [0, 1] using sigmoid function."""
         import numpy as np
 
-        return 1 / (1 + np.exp(-scores))
+        scores = np.asarray(scores, dtype=np.float64)
+        scores = np.nan_to_num(scores, nan=0.0, posinf=30.0, neginf=-30.0)
+        result = 1 / (1 + np.exp(-np.clip(scores, -30, 30)))
+        return np.clip(result, 0.0, 1.0)
 
     def filter_by_threshold(
         self, results: list[dict], min_score: Optional[float] = None

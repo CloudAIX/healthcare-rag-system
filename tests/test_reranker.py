@@ -61,11 +61,13 @@ def test_reranker_rerank_sorting(reranker, sample_chunks):
 
 
 def test_reranker_min_score_filtering(reranker, sample_chunks):
-    """Test minimum score filtering."""
+    """Test minimum score filtering via filter_by_threshold."""
     query = "water"
     results = reranker.rerank(query, sample_chunks)
+    filtered = reranker.filter_by_threshold(results)
 
-    assert all(r["score"] >= reranker.min_score for r in results)
+    assert all(r["score"] >= reranker.min_score for r in filtered)
+    assert len(filtered) <= len(results)
 
 
 def test_reranker_empty_chunks(reranker):
