@@ -69,7 +69,9 @@ def chunk_document(document, chunk_size=700, chunk_overlap=100):
         chunks.append(Chunk(chunk_id=generate_chunk_id(document.filename,idx,ct),
             text=ct, document_title=document.title, document_filename=document.filename,
             page_numbers=cp, sections=cs, chunk_index=idx, char_start=start, char_end=end))
-        start = end - covr; idx += 1
+        new_start = end - covr
+        start = new_start if new_start > start else end
+        idx += 1
     return chunks
 
 def chunk_all_documents(documents):

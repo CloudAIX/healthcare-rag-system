@@ -1,12 +1,82 @@
 [
-  {"id":"eval-001","question":"What are the 7 strengthened aged care quality standards?","category":"factual","difficulty":"easy"},
-  {"id":"eval-002","question":"What does Standard 1 require regarding dignity and respect?","category":"factual","difficulty":"easy"},
-  {"id":"eval-003","question":"What are the medication management requirements?","category":"clinical","difficulty":"medium"},
-  {"id":"eval-004","question":"How should a provider handle a complaint from a resident's family?","category":"governance","difficulty":"medium"},
-  {"id":"eval-005","question":"What infection prevention and control measures are required?","category":"clinical","difficulty":"medium"},
-  {"id":"eval-006","question":"What are the food and nutrition requirements under Standard 6?","category":"factual","difficulty":"easy"},
-  {"id":"eval-007","question":"How do the standards address Aboriginal and Torres Strait Islander peoples?","category":"cross-standard","difficulty":"hard"},
-  {"id":"eval-008","question":"What is the provider's responsibility for workforce governance?","category":"governance","difficulty":"medium"},
-  {"id":"eval-009","question":"What are the requirements for advance care planning?","category":"clinical","difficulty":"medium"},
-  {"id":"eval-010","question":"What is the capital of France?","category":"out_of_scope","difficulty":"easy"}
+  {
+    "id": "eval-001",
+    "question": "What are the 7 strengthened aged care quality standards?",
+    "ground_truth": "The 7 Strengthened Aged Care Quality Standards are: Standard 1 - The Person, Standard 2 - The Organisation, Standard 3 - The Care and Services, Standard 4 - The Environment, Standard 5 - Clinical Care, Standard 6 - Food and Nutrition, and Standard 7 - The Residential Community.",
+    "expected_sources": ["strengthened-aged-care-quality-standards-august-2025.pdf"],
+    "category": "factual",
+    "difficulty": "easy"
+  },
+  {
+    "id": "eval-002",
+    "question": "What does Standard 1 require regarding dignity and respect?",
+    "ground_truth": "Standard 1 requires that each person is treated with dignity and respect, their identity, culture and diversity are valued, they are supported to exercise choice and independence, and their rights are upheld including the right to be free from all forms of abuse and neglect.",
+    "expected_sources": ["strengthened-aged-care-quality-standards-august-2025.pdf", "guidance-material-standard-1.pdf"],
+    "category": "factual",
+    "difficulty": "easy"
+  },
+  {
+    "id": "eval-003",
+    "question": "What are the medication management requirements?",
+    "ground_truth": "Medication management requirements include safe and appropriate prescribing, dispensing and administration of medicines, regular medication reviews, proper storage and handling, documentation of all medication incidents, and ensuring staff have appropriate training and competency in medication management.",
+    "expected_sources": ["strengthened-aged-care-quality-standards-august-2025.pdf"],
+    "category": "clinical",
+    "difficulty": "medium"
+  },
+  {
+    "id": "eval-004",
+    "question": "How should a provider handle a complaint from a resident's family?",
+    "ground_truth": "Providers must have an accessible and responsive complaints management system, acknowledge complaints promptly, investigate thoroughly with appropriate resolution, keep the complainant informed of progress, ensure no adverse consequences for making complaints, and document all complaints and actions taken.",
+    "expected_sources": ["strengthened-aged-care-quality-standards-august-2025.pdf"],
+    "category": "governance",
+    "difficulty": "medium"
+  },
+  {
+    "id": "eval-005",
+    "question": "What infection prevention and control measures are required?",
+    "ground_truth": "Required infection prevention and control measures include an infection prevention and control program, hand hygiene practices, use of personal protective equipment, environmental cleaning protocols, outbreak management plans, antimicrobial stewardship, staff immunisation programs, and surveillance and reporting of infections.",
+    "expected_sources": ["strengthened-aged-care-quality-standards-august-2025.pdf"],
+    "category": "clinical",
+    "difficulty": "medium"
+  },
+  {
+    "id": "eval-006",
+    "question": "What are the food and nutrition requirements under Standard 6?",
+    "ground_truth": "Standard 6 requires that food and nutrition services meet each person's nutritional needs and preferences, food is appetising and meets food safety standards, people have access to food and drinks of their choice, specialised diets are provided when needed, and nutritional screening and assessment are undertaken regularly.",
+    "expected_sources": ["strengthened-aged-care-quality-standards-august-2025.pdf"],
+    "category": "factual",
+    "difficulty": "easy"
+  },
+  {
+    "id": "eval-007",
+    "question": "How do the standards address Aboriginal and Torres Strait Islander peoples?",
+    "ground_truth": "The standards require culturally safe and responsive care for Aboriginal and Torres Strait Islander peoples, recognising their unique cultural needs, involving Elders and community, respecting connection to Country, and ensuring workforce cultural competency. Providers must embed cultural safety in governance and care delivery.",
+    "expected_sources": ["strengthened-aged-care-quality-standards-august-2025.pdf", "guidance-material-standard-1.pdf"],
+    "category": "cross-standard",
+    "difficulty": "hard"
+  },
+  {
+    "id": "eval-008",
+    "question": "What is the provider's responsibility for workforce governance?",
+    "ground_truth": "Providers are responsible for ensuring adequate staffing levels and skill mix, ongoing training and professional development, worker screening and background checks, performance management, a positive workplace culture, and compliance with employment obligations including mandatory care minutes.",
+    "expected_sources": ["strengthened-aged-care-quality-standards-august-2025.pdf"],
+    "category": "governance",
+    "difficulty": "medium"
+  },
+  {
+    "id": "eval-009",
+    "question": "What are the requirements for advance care planning?",
+    "ground_truth": "Requirements for advance care planning include supporting each person to make informed decisions about their future care, documenting advance care directives, respecting and following documented wishes, involving family and representatives as appropriate, and regularly reviewing care plans to reflect changing needs and preferences.",
+    "expected_sources": ["strengthened-aged-care-quality-standards-august-2025.pdf"],
+    "category": "clinical",
+    "difficulty": "medium"
+  },
+  {
+    "id": "eval-010",
+    "question": "What is the capital of France?",
+    "ground_truth": "This question is out of scope. The system should respond that it cannot find sufficient evidence in the available documents to answer this question.",
+    "expected_sources": [],
+    "category": "out_of_scope",
+    "difficulty": "easy"
+  }
 ]

@@ -68,8 +68,9 @@ def parse_pdf(filepath):
         pages.append(PageContent(page_number=i+1, text=cleaned,
             document_title=title, document_filename=filename,
             detected_sections=detect_sections(cleaned)))
+    total_pages = len(doc)
     doc.close()
-    return DocumentContent(filename=filename, title=title, total_pages=len(doc), pages=pages)
+    return DocumentContent(filename=filename, title=title, total_pages=total_pages, pages=pages)
 
 def parse_all_pdfs(directory):
     pdf_files = sorted(Path(directory).glob("*.pdf"))
