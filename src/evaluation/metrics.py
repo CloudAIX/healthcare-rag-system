@@ -64,10 +64,32 @@ class LLMJudge:
         )
         text = resp.content[0].text.strip()
         # Extract JSON from markdown code fence if present
-        m = re.search(r"```(?:json)?\s*(\{.*?\})\s*```", text, re.DOTALL)
+        m = re.search(r"```(?:json)?\s*(\{.*\})\s*```", text, re.DOTALL)
         if m:
             text = m.group(1)
-        return json.loads(text)
+        else:
+            # Find the outermost JSON object in the response
+            start = text.find("{")
+            end = text.rfind("}")
+            if start != -1 and end != -1 and end > start:
+                text = text[start:end + 1]
+        try:
+            return json.loads(text)
+        except json.JSONDecodeError:
+            # Fix common LLM JSON issues
+            cleaned = re.sub(r",\s*([}\]])", r"\1", text)  # trailing commas
+            try:
+                return json.loads(cleaned)
+            except json.JSONDecodeError:
+                # Last resort: ask the same model to fix its own JSON
+                fix_resp = self.client.messages.create(
+                    model=self.model, max_tokens=max_tokens, temperature=0.0,
+                    system="Fix the JSON below so it is valid. Return ONLY the corrected JSON, no explanation.",
+                    messages=[{"role": "user", "content": cleaned}],
+                )
+                fixed = fix_resp.content[0].text.strip()
+                m2 = re.search(r"\{.*\}", fixed, re.DOTALL)
+                return json.loads(m2.group(0) if m2 else fixed)
 
 
 # ---------------------------------------------------------------------------
@@ -112,7 +134,7 @@ class FaithfulnessMetric(BaseMetric):
         user_msg = f"CONTEXT:\n{ctx_block}\n\nANSWER:\n{answer}"
 
         try:
-            result = self.judge.ask_json(FAITHFULNESS_SYSTEM, user_msg)
+            result = self.judge.ask_json(FAITHFULNESS_SYSTEM, user_msg, max_tokens=4096)
             score = float(result.get("score", 0.0))
             return MetricResult(
                 score=max(0.0, min(1.0, score)),
