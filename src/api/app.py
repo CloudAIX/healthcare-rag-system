@@ -103,11 +103,25 @@ async def query(
     """Run a RAG query against the aged care standards corpus."""
     if retriever is None or generator is None:
         raise HTTPException(503, "Not initialised")
+    from src.observability import Tracer
+    tracer = Tracer(body.question, source="api")
     start = time.perf_counter()
-    chunks = retriever.retrieve(body.question, top_k=body.top_k)
+    with tracer.span("retrieve"):
+        chunks = retriever.retrieve(body.question, top_k=body.top_k)
+    tracer.set_retrieval(chunks, retriever.backend)
     if not chunks:
+        tracer.fail("no relevant documents")
+        tracer.finish()
         raise HTTPException(404, "No relevant documents found.")
-    response = generator.generate(body.question, chunks)
+    try:
+        with tracer.span("generate"):
+            response = generator.generate(body.question, chunks)
+    except Exception as e:
+        tracer.fail(f"generation: {e}")
+        tracer.finish()
+        raise
+    tracer.set_generation(response)
+    tracer.finish()
     ms = (time.perf_counter() - start) * 1000
     return QueryResponse(
         question=response.question,

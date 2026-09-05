@@ -154,15 +154,27 @@ def standards_ask(params: AskInput) -> str:
 
     Returns: JSON {"question", "answer", "citations": [...]}
     """
+    from src.observability import Tracer
+
     r = _get_retriever()
-    chunks = r.retrieve(params.question)
+    tracer = Tracer(params.question, source="mcp")
+    with tracer.span("retrieve"):
+        chunks = r.retrieve(params.question)
+    tracer.set_retrieval(chunks, r.backend)
     if not chunks:
+        tracer.fail("no relevant chunks")
+        tracer.finish()
         return json.dumps({"error": "no relevant chunks retrieved", "question": params.question})
     try:
-        answer = _get_generator().generate(params.question, chunks)
+        with tracer.span("generate"):
+            answer = _get_generator().generate(params.question, chunks)
     except Exception as e:
+        tracer.fail(f"generation: {e}")
+        tracer.finish()
         return json.dumps({"error": f"generation failed: {e}",
                            "hint": "check ANTHROPIC_API_KEY; standards_search still works without it"})
+    tracer.set_generation(answer)
+    tracer.finish()
     answer_text = answer if isinstance(answer, str) else getattr(answer, "answer", str(answer))
     return json.dumps(
         {"question": params.question, "answer": answer_text,

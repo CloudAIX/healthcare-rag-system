@@ -29,7 +29,7 @@ st.sidebar.caption("Aged Care Standards Compliance")
 
 page = st.sidebar.radio(
     "Navigation",
-    ["Query", "Evaluation", "Corpus", "System Health"],
+    ["Query", "Evaluation", "Corpus", "Observability", "System Health"],
     index=0,
 )
 
@@ -51,6 +51,9 @@ elif page == "Evaluation":
 elif page == "Corpus":
     from views import corpus_page
     corpus_page.render()
+elif page == "Observability":
+    from views import observability_page
+    observability_page.render()
 elif page == "System Health":
     from views import health_page
     health_page.render()

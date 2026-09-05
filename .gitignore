@@ -17,3 +17,4 @@ Thumbs.db
 eval/results/*.json
 docker-compose.override.yml
 setup_scaffold.sh
+data/traces/

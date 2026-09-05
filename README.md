@@ -270,6 +270,12 @@ claude mcp add aged-care-standards -- \
 
 Honours `RAG_BACKEND=azure` like everything else. Offline tests in `tests/test_mcp_server.py`.
 
+## Observability (you cannot govern what you cannot see)
+
+Every API `/query` and MCP `standards_ask` records one trace: per-stage spans (retrieve / generate), token usage, cost, top retrieval score, backend and status. JSONL sink at `data/traces/traces.jsonl` — no external service required; set `LANGFUSE_PUBLIC_KEY` to mirror traces to Langfuse.
+
+The dashboard's **Observability** page turns the sink into the numbers that matter: p50/p95 latency, latency by stage, cost per request, tokens in/out, error count, and a per-backend comparison (Chroma vs Azure on the same questions). Observability failures never break the request path.
+
 ## Deployment
 
 ```bash
