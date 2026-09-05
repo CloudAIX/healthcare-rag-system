@@ -15,12 +15,16 @@ class Embedder:
     def __init__(self, config=None):
         if config is None: config = load_embedding_config()
         self.model_name = config["embedding"]["model"]
+        import os as _os
         persist = Path(config["vector_store"]["persist_directory"])
         if not persist.is_absolute():
-            # Anchor relative paths to the repo, not the caller's cwd —
+            # Anchor relative paths to the data dir, not the caller's cwd —
             # MCP clients and services launch this from arbitrary directories.
-            repo_root = Path(__file__).parent.parent.parent
-            persist = persist if persist.exists() else repo_root / persist
+            # RAG_DATA_DIR overrides (also used by tests).
+            data_dir = Path(_os.getenv("RAG_DATA_DIR") or Path(__file__).parent.parent.parent / "data")
+            # config paths look like ./data/processed/chroma — strip the data/ prefix
+            parts = [p for p in persist.parts if p not in (".", "data")]
+            persist = data_dir.joinpath(*parts)
         self.persist_dir = str(persist)
         self.collection_name = config["vector_store"]["collection_name"]
         print(f"Loading embedding model: {self.model_name}")

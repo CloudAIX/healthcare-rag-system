@@ -69,9 +69,10 @@ class Retriever:
         """Initialize BM25, reranker, and RRF components."""
         # BM25 index
         # Repo-anchored, not cwd-relative: MCP clients launch this from anywhere.
-        bm25_path = Path(__file__).parent.parent.parent / "data" / "processed" / "bm25_index.pkl"
-        if not bm25_path.exists() and Path("./data/processed/bm25_index.pkl").exists():
-            bm25_path = Path("./data/processed/bm25_index.pkl")
+        # RAG_DATA_DIR overrides the data directory (also used by tests).
+        import os as _os
+        data_dir = Path(_os.getenv("RAG_DATA_DIR") or Path(__file__).parent.parent.parent / "data")
+        bm25_path = data_dir / "processed" / "bm25_index.pkl"
         self.bm25_index = BM25Index(self.config, persist_path=bm25_path)
         if self.bm25_index.exists():
             try:
