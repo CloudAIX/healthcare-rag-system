@@ -251,6 +251,25 @@ Run 6 Sep 2026 against a live Azure AI Search service (free tier, australiaeast)
 
 The local stack edges ahead on retrieval quality for this small corpus; Azure buys managed infrastructure, single-call hybrid search and an onshore (Australia East) data boundary. Both clear every threshold — which is the point: the evaluation harness, not the vendor, decides.
 
+## MCP server (agents get governed access)
+
+The retrieval layer is also exposed as a **Model Context Protocol** server, so any MCP client (Claude Code, Claude Desktop, or your own agents) can query the Standards with citations enforced at the tool boundary. All tools are read-only.
+
+| Tool | What it does |
+|---|---|
+| `standards_search` | Hybrid retrieval + re-rank; every hit carries a `[Source: ...]` citation |
+| `standards_get_chunk` | Full text of one chunk by id |
+| `standards_ask` | Full RAG answer with citations (needs `ANTHROPIC_API_KEY`) |
+| `standards_corpus_info` | Active backend + chunk count |
+
+```bash
+# Register with Claude Code (stdio; first call loads models, ~60s)
+claude mcp add aged-care-standards -- \
+  $(pwd)/venv/bin/python -m src.mcp_server.server
+```
+
+Honours `RAG_BACKEND=azure` like everything else. Offline tests in `tests/test_mcp_server.py`.
+
 ## Deployment
 
 ```bash
