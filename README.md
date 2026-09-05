@@ -238,6 +238,19 @@ RAG_BACKEND=azure python scripts/run_eval.py
 
 Config lives in `retrieval_config.yaml` (`vector_store.backend`, `azure_search.index_name`); `RAG_BACKEND` overrides per process. Offline unit tests cover the mapping layer (`tests/test_azure_store.py`), so the suite stays green without an Azure subscription.
 
+### Backend comparison — same golden dataset, same judge, same thresholds
+
+Run 6 Sep 2026 against a live Azure AI Search service (free tier, australiaeast), identical MiniLM embeddings both sides:
+
+| Metric | ChromaDB + BM25 + RRF | Azure AI Search hybrid | Threshold |
+|---|---|---|---|
+| Faithfulness | 0.994 | 0.961 | 0.85 — both pass |
+| Answer relevancy | 0.901 | 0.826 | 0.80 — both pass |
+| Context precision | 0.883 | 0.833 | 0.75 — both pass |
+| Citation accuracy | 1.000 | 1.000 | 0.90 — both pass |
+
+The local stack edges ahead on retrieval quality for this small corpus; Azure buys managed infrastructure, single-call hybrid search and an onshore (Australia East) data boundary. Both clear every threshold — which is the point: the evaluation harness, not the vendor, decides.
+
 ## Deployment
 
 ```bash
