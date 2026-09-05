@@ -240,16 +240,16 @@ Config lives in `retrieval_config.yaml` (`vector_store.backend`, `azure_search.i
 
 ### Backend comparison — same golden dataset, same judge, same thresholds
 
-Run 6 Sep 2026 against a live Azure AI Search service (free tier, australiaeast), identical MiniLM embeddings both sides:
+Three retrieval backends, one eval harness. Live runs 6 Sep 2026, identical MiniLM embeddings throughout. GCP uses **BigQuery `VECTOR_SEARCH`** in the free sandbox (brute force, no billing account) — the honest fit for a 95-chunk corpus, instead of an always-on Vertex vector endpoint (`RAG_BACKEND=bigquery`, config in `bigquery:` block, ingest via `scripts/ingest_bigquery.py`).
 
-| Metric | ChromaDB + BM25 + RRF | Azure AI Search hybrid | Threshold |
-|---|---|---|---|
-| Faithfulness | 0.994 | 0.961 | 0.85 — both pass |
-| Answer relevancy | 0.901 | 0.826 | 0.80 — both pass |
-| Context precision | 0.883 | 0.833 | 0.75 — both pass |
-| Citation accuracy | 1.000 | 1.000 | 0.90 — both pass |
+| Metric | ChromaDB + BM25 + RRF | Azure AI Search hybrid | BigQuery VECTOR_SEARCH | Threshold |
+|---|---|---|---|---|
+| Faithfulness | 0.994 | 0.961 | **1.000** | 0.85 — all pass |
+| Answer relevancy | 0.901 | 0.826 | 0.833 | 0.80 — all pass |
+| Context precision | 0.883 | 0.833 | 0.833 | 0.75 — all pass |
+| Citation accuracy | 1.000 | 1.000 | 1.000 | 0.90 — all pass |
 
-The local stack edges ahead on retrieval quality for this small corpus; Azure buys managed infrastructure, single-call hybrid search and an onshore (Australia East) data boundary. Both clear every threshold — which is the point: the evaluation harness, not the vendor, decides.
+The local stack edges ahead on retrieval quality for this small corpus; the clouds buy managed infrastructure, single-call retrieval, and (Azure) an onshore Australia East data boundary. All three clear every threshold — which is the point: **the evaluation harness, not the vendor, decides.**
 
 ## MCP server (agents get governed access)
 

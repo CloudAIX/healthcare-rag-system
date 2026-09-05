@@ -44,6 +44,11 @@ class Retriever:
             from .azure_search_store import AzureSearchStore
             self.embedder = AzureSearchStore(self.config)
             enable_hybrid = False
+        elif self.backend == "bigquery":
+            # BigQuery VECTOR_SEARCH (sandbox, brute force): vector-only + reranker.
+            from .bigquery_store import BigQueryStore
+            self.embedder = BigQueryStore(self.config)
+            enable_hybrid = False
         else:
             self.embedder = Embedder(self.config)
         self.enable_hybrid = enable_hybrid
@@ -61,8 +66,8 @@ class Retriever:
 
         if self.enable_hybrid:
             self._init_hybrid_components()
-        elif self.backend == "azure":
-            # Hybrid happens inside Azure AI Search; keep the cross-encoder on top.
+        elif self.backend in ("azure", "bigquery"):
+            # Store-side retrieval; keep the cross-encoder on top.
             self._init_reranker()
 
     def _init_hybrid_components(self):

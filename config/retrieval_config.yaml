@@ -17,6 +17,9 @@ vector_store:
   collection_name: "aged_care_standards"
 azure_search:
   index_name: "aged-care-standards"
+bigquery:
+  dataset: "healthcare_rag"
+  table: "chunks"
 retrieval:
   top_k_vector: 5
   top_k_bm25: 5
