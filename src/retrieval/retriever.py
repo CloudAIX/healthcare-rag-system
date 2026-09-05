@@ -34,7 +34,18 @@ def load_retrieval_config():
 class Retriever:
     def __init__(self, embedder=None, enable_hybrid=True):
         self.config = load_retrieval_config()
-        self.embedder = embedder or Embedder(self.config)
+        import os
+        self.backend = os.getenv("RAG_BACKEND") or self.config["vector_store"].get("backend", "chroma")
+        if embedder is not None:
+            self.embedder = embedder
+        elif self.backend == "azure":
+            # Azure AI Search runs vector + keyword hybrid in a single call, so the
+            # local BM25/RRF stage is redundant — reranker still applies on top.
+            from .azure_search_store import AzureSearchStore
+            self.embedder = AzureSearchStore(self.config)
+            enable_hybrid = False
+        else:
+            self.embedder = Embedder(self.config)
         self.enable_hybrid = enable_hybrid
 
         # Configuration parameters
@@ -50,6 +61,9 @@ class Retriever:
 
         if self.enable_hybrid:
             self._init_hybrid_components()
+        elif self.backend == "azure":
+            # Hybrid happens inside Azure AI Search; keep the cross-encoder on top.
+            self._init_reranker()
 
     def _init_hybrid_components(self):
         """Initialize BM25, reranker, and RRF components."""
@@ -67,6 +81,12 @@ class Retriever:
             self.bm25_index = None
 
         # Cross-encoder reranker
+        self._init_reranker()
+
+        # RRF fusion
+        self.rrf_fusion = RRFFusion(k=self.rrf_k)
+
+    def _init_reranker(self):
         try:
             reranker_config = self.config.get("reranker", {})
             model_name = reranker_config.get("model", "cross-encoder/ms-marco-MiniLM-L-6-v2")
@@ -75,9 +95,6 @@ class Retriever:
         except Exception as e:
             print(f"Warning: Could not load reranker: {e}")
             self.reranker = None
-
-        # RRF fusion
-        self.rrf_fusion = RRFFusion(k=self.rrf_k)
 
     def retrieve(self, query, top_k=None):
         """
@@ -121,7 +138,24 @@ class Retriever:
         return self._format_results(final_results)
 
     def _retrieve_vector_only(self, query, top_k):
-        """Fallback to vector-only retrieval."""
+        """Single-store retrieval (Chroma vector-only, or Azure hybrid-in-one-call).
+
+        When a reranker is available, over-fetch candidates and let the
+        cross-encoder pick the final top_k, mirroring the hybrid path.
+        """
+        if self.reranker is not None:
+            pool = self.top_k_vector + self.top_k_bm25
+            hits = self.embedder.query(query, top_k=max(pool, top_k))
+            by_id = {h["id"]: h for h in hits}
+            reranked = self.reranker.rerank(
+                query, [{"id": h["id"], "text": h["text"], "score": h["distance"]} for h in hits]
+            )
+            out = []
+            for r in reranked[:top_k]:
+                hit = by_id.get(r["id"])
+                if hit:
+                    out.append(self._hit_to_chunk({**hit, "distance": r["score"]}))
+            return out
         raw = self.embedder.query(query, top_k=top_k)
         return [self._hit_to_chunk(hit) for hit in raw]
 

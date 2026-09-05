@@ -9,9 +9,14 @@ embedding:
   model: "all-MiniLM-L6-v2"
   dimension: 384
 vector_store:
+  # backend: chroma (local, default) | azure (Azure AI Search, hybrid in one call)
+  # Override with RAG_BACKEND env var. Azure needs AZURE_SEARCH_ENDPOINT + AZURE_SEARCH_KEY.
+  backend: "chroma"
   type: "chromadb"
   persist_directory: "./data/processed/chroma"
   collection_name: "aged_care_standards"
+azure_search:
+  index_name: "aged-care-standards"
 retrieval:
   top_k_vector: 5
   top_k_bm25: 5

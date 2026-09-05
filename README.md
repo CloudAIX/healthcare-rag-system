@@ -218,6 +218,26 @@ healthcare-rag-system/
 └── requirements.txt
 ```
 
+## Azure twin (Azure AI Search backend)
+
+The retrieval layer is backend-switchable: the same corpus, chunker, embedding model and evaluation suite run against either local ChromaDB + BM25 or **Azure AI Search**, where vector + keyword hybrid happens in a single service call (the cross-encoder reranker still applies on top). Same embeddings both sides, so any quality difference is the store, not the model.
+
+```bash
+# 1. Provision (Terraform: resource group + AI Search, australiaeast to keep health data onshore)
+cd infra/azure && terraform init && terraform apply
+export AZURE_SEARCH_ENDPOINT=$(terraform output -raw search_endpoint)
+export AZURE_SEARCH_KEY=$(terraform output -raw search_admin_key)
+
+# 2. Ingest the same 95 chunks
+python scripts/ingest_azure.py
+
+# 3. Run anything against Azure
+RAG_BACKEND=azure uvicorn src.api.app:app
+RAG_BACKEND=azure python scripts/run_eval.py
+```
+
+Config lives in `retrieval_config.yaml` (`vector_store.backend`, `azure_search.index_name`); `RAG_BACKEND` overrides per process. Offline unit tests cover the mapping layer (`tests/test_azure_store.py`), so the suite stays green without an Azure subscription.
+
 ## Deployment
 
 ```bash
