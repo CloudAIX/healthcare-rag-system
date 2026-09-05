@@ -15,7 +15,13 @@ class Embedder:
     def __init__(self, config=None):
         if config is None: config = load_embedding_config()
         self.model_name = config["embedding"]["model"]
-        self.persist_dir = config["vector_store"]["persist_directory"]
+        persist = Path(config["vector_store"]["persist_directory"])
+        if not persist.is_absolute():
+            # Anchor relative paths to the repo, not the caller's cwd —
+            # MCP clients and services launch this from arbitrary directories.
+            repo_root = Path(__file__).parent.parent.parent
+            persist = persist if persist.exists() else repo_root / persist
+        self.persist_dir = str(persist)
         self.collection_name = config["vector_store"]["collection_name"]
         print(f"Loading embedding model: {self.model_name}")
         self.model = SentenceTransformer(self.model_name)
