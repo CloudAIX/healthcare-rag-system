@@ -1,5 +1,12 @@
 # Healthcare RAG System
 
+![Python](https://img.shields.io/badge/Python-3.11-3776AB?logo=python&logoColor=white)
+![FastAPI](https://img.shields.io/badge/FastAPI-0.115-009688?logo=fastapi&logoColor=white)
+![Streamlit](https://img.shields.io/badge/Streamlit-1.40-FF4B4B?logo=streamlit&logoColor=white)
+![Claude](https://img.shields.io/badge/Claude_Sonnet-Anthropic-D4A574?logo=anthropic&logoColor=white)
+![Tests](https://img.shields.io/badge/Tests-103%2F103_passing-brightgreen)
+![License](https://img.shields.io/badge/License-MIT-blue)
+
 Production-grade Retrieval-Augmented Generation pipeline for Australian Aged Care Quality Standards compliance. Ask natural language questions about the Strengthened Aged Care Quality Standards and get grounded, cited answers.
 
 **Built by [GVRN-AI](https://gvrn-ai.com)** — AI governance and automation for healthcare.
@@ -116,9 +123,11 @@ All endpoints require authentication except `/health`.
 # Health check
 curl http://localhost:8000/health
 
-# Get a JWT token
+# Get a JWT token (API key goes in the header AND the body — deliberate double-check)
 curl -X POST http://localhost:8000/auth/token \
-  -H "X-API-Key: your-api-key"
+  -H "X-API-Key: your-api-key" \
+  -H "Content-Type: application/json" \
+  -d '{"api_key": "your-api-key", "client_id": "my-client"}'
 
 # Query the pipeline
 curl -X POST http://localhost:8000/query \
@@ -202,12 +211,22 @@ healthcare-rag-system/
 │   ├── download_corpus.py       # Download PDFs from source
 │   ├── ingest.py                # Parse + chunk + embed pipeline
 │   └── run_eval.py              # Evaluation runner
-├── tests/                       # 99/103 passing
+├── tests/                       # 103/103 passing
 ├── eval/
 │   └── golden_dataset.json      # 10 items, 5 categories
 ├── .env.example                 # All configurable env vars
 └── requirements.txt
 ```
+
+## Deployment
+
+```bash
+# Container build (API only; dashboard runs separately)
+docker build -t healthcare-rag .
+docker run -p 8000:8000 --env-file .env -v $(pwd)/data:/app/data healthcare-rag
+```
+
+The `data/` volume carries the ingested ChromaDB collection and BM25 index — run `python scripts/ingest.py` once before first query. Models (~90MB) download on first start; allow ~60s before `Application startup complete`.
 
 ## Testing
 
@@ -215,7 +234,7 @@ healthcare-rag-system/
 python -m pytest tests/ -v
 ```
 
-99/103 tests across 6 test suites: BM25 index, RRF fusion, reranker, hybrid retriever, evaluation metrics, API security.
+103/103 tests across 6 test suites: BM25 index, RRF fusion, reranker, hybrid retriever, evaluation metrics, API security.
 
 ## Configuration
 

@@ -91,9 +91,11 @@ def test_retriever_vector_only_mode(sample_chunks):
     assert retriever.bm25_index is None
 
 
-def test_retriever_hybrid_mode_no_index():
+def test_retriever_hybrid_mode_no_index(tmp_path, monkeypatch):
     """Test retriever in hybrid mode when BM25 index doesn't exist."""
-    # Initialize with hybrid enabled but no BM25 index
+    # BM25 path is cwd-relative, so an empty temp cwd guarantees no index
+    # regardless of whether the real one has been built.
+    monkeypatch.chdir(tmp_path)
     retriever = Retriever(enable_hybrid=True)
 
     # Should gracefully handle missing BM25 index
