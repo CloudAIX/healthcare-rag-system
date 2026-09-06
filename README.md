@@ -4,7 +4,7 @@
 ![FastAPI](https://img.shields.io/badge/FastAPI-0.115-009688?logo=fastapi&logoColor=white)
 ![Streamlit](https://img.shields.io/badge/Streamlit-1.40-FF4B4B?logo=streamlit&logoColor=white)
 ![Claude](https://img.shields.io/badge/Claude_Sonnet-Anthropic-D4A574?logo=anthropic&logoColor=white)
-![Tests](https://img.shields.io/badge/Tests-103%2F103_passing-brightgreen)
+![Tests](https://img.shields.io/badge/Tests-121%2F121_passing-brightgreen)
 ![License](https://img.shields.io/badge/License-MIT-blue)
 
 Production-grade Retrieval-Augmented Generation pipeline for Australian Aged Care Quality Standards compliance. Ask natural language questions about the Strengthened Aged Care Quality Standards and get grounded, cited answers.
@@ -211,7 +211,7 @@ healthcare-rag-system/
 │   ├── download_corpus.py       # Download PDFs from source
 │   ├── ingest.py                # Parse + chunk + embed pipeline
 │   └── run_eval.py              # Evaluation runner
-├── tests/                       # 103/103 passing
+├── tests/                       # 121/121 passing
 ├── eval/
 │   └── golden_dataset.json      # 10 items, 5 categories
 ├── .env.example                 # All configurable env vars
@@ -292,7 +292,7 @@ The `data/` volume carries the ingested ChromaDB collection and BM25 index — r
 python -m pytest tests/ -v
 ```
 
-103/103 tests across 6 test suites: BM25 index, RRF fusion, reranker, hybrid retriever, evaluation metrics, API security.
+121/121 tests across 10 test suites: BM25 index, RRF fusion, reranker, hybrid retriever, evaluation metrics, API security, Azure store, BigQuery store, MCP server, tracing.
 
 ## Configuration
 
