@@ -4,7 +4,7 @@
 ![FastAPI](https://img.shields.io/badge/FastAPI-0.115-009688?logo=fastapi&logoColor=white)
 ![Streamlit](https://img.shields.io/badge/Streamlit-1.40-FF4B4B?logo=streamlit&logoColor=white)
 ![Claude](https://img.shields.io/badge/Claude_Sonnet-Anthropic-D4A574?logo=anthropic&logoColor=white)
-![Tests](https://img.shields.io/badge/Tests-121%2F121_passing-brightgreen)
+[![Tests](https://github.com/CloudAIX/healthcare-rag-system/actions/workflows/tests.yml/badge.svg)](https://github.com/CloudAIX/healthcare-rag-system/actions/workflows/tests.yml)
 ![License](https://img.shields.io/badge/License-MIT-blue)
 
 Production-grade Retrieval-Augmented Generation pipeline for Australian Aged Care Quality Standards compliance. Ask natural language questions about the Strengthened Aged Care Quality Standards and get grounded, cited answers.
@@ -293,6 +293,8 @@ python -m pytest tests/ -v
 ```
 
 121/121 tests across 10 test suites: BM25 index, RRF fusion, reranker, hybrid retriever, evaluation metrics, API security, Azure store, BigQuery store, MCP server, tracing.
+
+The same suite runs in GitHub Actions on every push and pull request to `main` (`.github/workflows/tests.yml`).
 
 ## Configuration
 
