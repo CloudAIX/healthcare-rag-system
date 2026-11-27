@@ -1,0 +1,123 @@
+version: "1.0"
+last_updated: "2026-11-27"
+
+# Urgent-situation safety routing (src/safety/triage.py).
+#
+# Runs BEFORE retrieval and generation. When a question describes a possible
+# emergency, the assistant returns the guidance below instead of an answer
+# from the corpus. The check is deliberately biased towards recall: a false
+# positive costs the user one rephrase, a false negative can cost a life.
+#
+# Patterns are Python regular expressions, matched case-insensitively against
+# the whitespace-normalised question. Keep guidance text short and actionable,
+# and have a clinician review any change (record it in config/CHANGELOG.md).
+#
+# Modes:
+#   emergency  the guidance REPLACES the normal answer (no retrieval, no LLM call)
+#   advisory   the question is policy-framed with no sign of a live situation
+#              (e.g. "What does the SIRS policy say about suspected abuse?"):
+#              answer normally, with the guidance banner prepended.
+#
+# allow_negation: if true, a match preceded within a few words by a negation
+# cue ("no", "didn't", "without", ...) is ignored, e.g. "fell but didn't hit
+# her head". Left false for categories where missing a case is worse.
+
+negation_cues: ["no", "not", "never", "without", "didn't", "did not", "doesn't",
+                "does not", "hasn't", "has not", "wasn't", "was not", "denies", "denied"]
+negation_window_words: 3
+
+# Signs the question is about a person right now, which always force emergency mode.
+immediacy_patterns:
+  - '\b(right now|currently|at the moment|just now|tonight|this (morning|afternoon|evening))\b'
+  - '\b(just|has just|have just) (fell|fallen|collapsed|had|started|found|hit|seen|noticed)\b'
+  - '\b(is|are|she''s|he''s|they''re|i''m) (having|experiencing|complaining|clutching|bleeding|unconscious|unresponsive|being|getting|vomiting)\b'
+  - '\b(minutes?|an hour|hours?) ago\b'
+  - '\bwhat (do|should) (i|we) do\b'
+  - '\b(help|urgent|emergency|asap)\b'
+  - '\bmy (mum|mom|mother|dad|father|nan|nanna|grandma|grandmother|grandpa|grandfather|wife|husband|partner|aunt|uncle|parent|parents|neighbour|neighbor)\b'
+  - '\b(a|the|our|my|one of (our|my)) (resident|client|patient)s? (is|are|has just|have just|just|was just)\b'
+
+# Signs the question is about rules, policy or training rather than a live event.
+policy_patterns:
+  - '\b(policy|policies|procedure|procedures|protocol|standard|standards|requirement|requirements|compliance|complian\w*|obligations?|legislation|act 2024|sirs|serious incident response scheme|audit|accreditation|training|framework|guidance|outcome \d)\b'
+
+categories:
+  - id: medical_emergency
+    label: "Possible heart attack, stroke or other medical emergency"
+    allow_negation: false
+    # Any one pattern triggers this category.
+    any_of:
+      - '\bchest (pain|pains|tightness|pressure|discomfort|hurts?|hurting)\b'
+      - '\b(crushing|squeezing|tight) (feeling )?(in (the|his|her|their|my) )?chest\b'
+      - '\bchest (feels|is|was|felt) (tight|heavy|painful|sore|like)\b'
+      - '\bpain\b.{0,30}\b(left arm|down (his|her|their|the|my) arm|jaw)\b'
+      - '\bheart attack\b'
+      - '\bcardiac arrest\b'
+      - '\bstroke\b'
+      - '\b(face|mouth) (is )?(drooping|droop|dropped)\b'
+      - '\bslurr(ed|ing) (speech|words)\b'
+      - '\b(not|stopped|isn''t|is not) breathing\b'
+      - '\b(can''t|cannot|can not|struggling to|unable to|trouble|difficulty) breath(e|ing)\b'
+      - '\b(unconscious|unresponsive|won''t wake|will not wake|can''t wake|cannot wake|passed out|collapsed)\b'
+      - '\b(seizure|seizing|fitting|convulsi\w+)\b'
+      - '\b(choking|choked)\b'
+      - '\b(overdose|overdosed|took too many)\b'
+    guidance: |
+      **This could be a medical emergency. Call Triple Zero (000) now and ask for an ambulance.**
+
+      - Do not wait to see if the symptoms pass, and do not drive the person to hospital yourself.
+      - In a care home, raise the alarm and alert the registered nurse on duty while you call.
+      - If the person is unresponsive and not breathing normally, start CPR and use a defibrillator (AED) if one is nearby. The 000 operator will talk you through it.
+      - Stay with the person until help arrives.
+
+  - id: fall_head_injury
+    label: "Fall with a possible head injury"
+    allow_negation: true
+    # Triggers when a fall term AND a head-injury term both appear in the question,
+    # or when any `any_of` pattern appears on its own.
+    all_of:
+      - '\b(fall|falls|fell|fallen|falling|slipped|tripped|toppled|found (him|her|them) on the floor|on the floor)\b'
+      - '\b(head|hit (his|her|their|my) head|banged|knocked out|concuss\w*|unconscious|blacked out|bleeding|blood|drowsy|confused|vomit\w*|blood thinners?|anticoagulants?|warfarin)\b'
+    any_of:
+      - '\bhead (injury|injuries|wound|knock|trauma)\b'
+      - '\b(hit|banged|bumped|struck|knocked) (his|her|their|my) head\b'
+    guidance: |
+      **A fall with a knock to the head needs urgent attention. Call Triple Zero (000) for an ambulance if the person:**
+
+      - was knocked out, even briefly, or is drowsy or hard to wake
+      - is confused, vomiting, has a severe or worsening headache, or a seizure
+      - is bleeding from the head, ears or nose, or has a cut that won't stop bleeding
+      - takes blood thinners (such as warfarin, apixaban or rivaroxaban)
+      - has neck or back pain. If so, do not move them; keep them still and warm.
+
+      If none of these apply, still arrange a same-day medical review with a doctor or nurse, because symptoms of bleeding on the brain can appear hours later. For advice, call healthdirect on 1800 022 222 (24 hours). In a care home, follow your post-fall procedure and notify the registered nurse.
+
+  - id: elder_abuse
+    label: "Possible abuse or neglect of an older person"
+    allow_negation: false
+    any_of:
+      - '\b(abuse|abused|abusing|abusive|mistreat\w*|maltreat\w*)\b'
+      - '\b(neglect|neglected|neglecting)\b'
+      # The lookahead keeps "she hit her head" out of this category.
+      - '\b(hit|hits|hitting|slapped|slapping|punched|pushed|shoved|kicked|rough(ly)? handled|grabbed)\b(?!\s+(his|her|their|my|the)\s+head).{0,40}\b(her|him|them|mum|mom|dad|resident|grandma|grandpa|nan|patient|client)\b'
+      - '\b(unexplained|unexplainable|suspicious) (bruis\w*|injur\w*|marks?|burns?|fractures?)\b'
+      - '\b(sexual(ly)? (assault\w*|abus\w*|touch\w*)|indecent\w*|inappropriately touch\w*|rape|raped)\b'
+      - '\b(taking|took|stealing|stole|stolen|controlling) (his|her|their|my (mum|mom|dad|mother|father)''?s?) (money|pension|bank|card|savings)\b'
+      - '\bfinancial (abuse|exploitation)\b'
+      - '\b(scared|afraid|frightened|terrified) of\b(\s+\w+){0,3}?\s+(carers?|caregivers?|staff|nurses?|son|daughter|husband|wife|partner|family)\b'
+      - '\b(threaten\w*|locked (in|up)|tied (up|down)|restrained without)\b'
+    guidance: |
+      **If anyone is in immediate danger, call Triple Zero (000) and ask for the police.**
+
+      - For free, confidential advice about elder abuse, call **1800ELDERHelp (1800 353 374)**. It connects you to the service in your state or territory.
+      - In residential or home aged care, the provider must report suspected abuse under the Serious Incident Response Scheme (SIRS). Priority 1 incidents must be reported to the Aged Care Quality and Safety Commission within 24 hours.
+      - Anyone, including family and staff, can raise a concern directly with the Aged Care Quality and Safety Commission on **1800 951 822**.
+      - Make sure the person is safe, write down what you saw or were told, and don't confront the person you suspect if that could put anyone at risk.
+
+footer: |
+  ---
+  *This assistant cannot assess emergencies. This message was shown because your question mentioned: {matched}. If this isn't an emergency, rephrase your question as a general or policy question.*
+
+advisory_banner: |
+  > **Safety note:** your question mentions {matched}. If this is happening now, call Triple Zero (000). The guidance below answers the policy question only.
+

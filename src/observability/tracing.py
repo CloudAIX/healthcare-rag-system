@@ -68,6 +68,9 @@ class Tracer:
         self.trace["input_tokens"] = response.input_tokens
         self.trace["output_tokens"] = response.output_tokens
         self.trace["cost_usd"] = round(response.cost_usd, 6)
+        safety = getattr(response, "safety", None)
+        if hasattr(safety, "is_emergency") and isinstance(getattr(safety, "mode", None), str):
+            self.trace["safety"] = {"mode": safety.mode, "categories": list(safety.categories)}
 
     def fail(self, error: str):
         self.trace["status"] = "error"

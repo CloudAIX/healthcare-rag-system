@@ -49,6 +49,14 @@ def render():
     top_k = st.slider("Retrieval depth (top_k)", 1, 10, 5)
 
     if st.button("Ask", type="primary", disabled=not question):
+        # Urgent-situation check first: it needs no models, so it works even
+        # when the pipeline failed to load.
+        from src.generation.generator import emergency_check
+        urgent = emergency_check(question)
+        if urgent is not None:
+            st.error(urgent.answer)
+            return
+
         retriever, generator = _get_pipeline()
 
         if st.session_state.get("pipeline_error"):

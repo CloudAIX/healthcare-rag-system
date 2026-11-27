@@ -156,8 +156,20 @@ def standards_ask(params: AskInput) -> str:
     """
     from src.observability import Tracer
 
-    r = _get_retriever()
+    from src.generation.generator import emergency_check
+
     tracer = Tracer(params.question, source="mcp")
+    with tracer.span("safety_check"):
+        urgent = emergency_check(params.question)
+    if urgent is not None:
+        tracer.set_generation(urgent)
+        tracer.finish()
+        return json.dumps(
+            {"question": params.question, "answer": urgent.answer, "citations": [],
+             "safety": {"mode": urgent.safety.mode, "categories": urgent.safety.categories}},
+            ensure_ascii=False, indent=2,
+        )
+    r = _get_retriever()
     with tracer.span("retrieve"):
         chunks = r.retrieve(params.question)
     tracer.set_retrieval(chunks, r.backend)

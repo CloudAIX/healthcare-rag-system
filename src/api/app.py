@@ -18,7 +18,8 @@ from src.api.security import (
     verify_api_key,
 )
 from src.retrieval.retriever import Retriever
-from src.generation.generator import Generator
+from src.generation.generator import Generator, emergency_check
+from src.safety import TriageResult
 
 # --- Request / Response models ---
 
@@ -34,6 +35,11 @@ class QueryResponse(BaseModel):
     output_tokens: int
     cost_usd: float
     latency_ms: float
+    # Set when the urgent-situation check fired. "emergency": the answer is fixed
+    # emergency guidance, not a corpus answer. "advisory": a normal answer with a
+    # safety note prepended.
+    safety_mode: str | None = None
+    safety_categories: list[str] = Field(default_factory=list)
 
 class HealthResponse(BaseModel):
     status: str
@@ -106,6 +112,12 @@ async def query(
     from src.observability import Tracer
     tracer = Tracer(body.question, source="api")
     start = time.perf_counter()
+    with tracer.span("safety_check"):
+        urgent = emergency_check(body.question)
+    if urgent is not None:
+        tracer.set_generation(urgent)
+        tracer.finish()
+        return _to_response(urgent, (time.perf_counter() - start) * 1000)
     with tracer.span("retrieve"):
         chunks = retriever.retrieve(body.question, top_k=body.top_k)
     tracer.set_retrieval(chunks, retriever.backend)
@@ -122,7 +134,13 @@ async def query(
         raise
     tracer.set_generation(response)
     tracer.finish()
-    ms = (time.perf_counter() - start) * 1000
+    return _to_response(response, (time.perf_counter() - start) * 1000)
+
+
+def _to_response(response, ms):
+    safety = getattr(response, "safety", None)
+    if not isinstance(safety, TriageResult):
+        safety = None
     return QueryResponse(
         question=response.question,
         answer=response.answer,
@@ -131,4 +149,6 @@ async def query(
         output_tokens=response.output_tokens,
         cost_usd=response.cost_usd,
         latency_ms=ms,
+        safety_mode=safety.mode if safety else None,
+        safety_categories=safety.categories if safety else [],
     )

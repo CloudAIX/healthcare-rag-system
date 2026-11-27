@@ -4,7 +4,7 @@
 ![FastAPI](https://img.shields.io/badge/FastAPI-0.115-009688?logo=fastapi&logoColor=white)
 ![Streamlit](https://img.shields.io/badge/Streamlit-1.40-FF4B4B?logo=streamlit&logoColor=white)
 ![Claude](https://img.shields.io/badge/Claude_Sonnet-Anthropic-D4A574?logo=anthropic&logoColor=white)
-![Tests](https://img.shields.io/badge/Tests-121%2F121_passing-brightgreen)
+![Tests](https://img.shields.io/badge/Tests-188%2F188_passing-brightgreen)
 ![License](https://img.shields.io/badge/License-MIT-blue)
 
 Production-grade Retrieval-Augmented Generation pipeline for Australian Aged Care Quality Standards compliance. Ask natural language questions about the Strengthened Aged Care Quality Standards and get grounded, cited answers.
@@ -27,7 +27,12 @@ Production-grade Retrieval-Augmented Generation pipeline for Australian Aged Car
                     ┌─────────────┐
                     │  User Query │
                     └──────┬──────┘
-                           │
+                           ▼
+                ┌─────────────────────┐   urgent    ┌──────────────────────┐
+                │ Safety triage       │────────────▶│ Emergency guidance   │
+                │ (rules, no LLM)     │             │ (000, helplines)     │
+                └──────────┬──────────┘             └──────────────────────┘
+                           │ not urgent
               ┌────────────┴────────────┐
               ▼                         ▼
      ┌────────────────┐       ┌─────────────────┐
@@ -211,7 +216,7 @@ healthcare-rag-system/
 │   ├── download_corpus.py       # Download PDFs from source
 │   ├── ingest.py                # Parse + chunk + embed pipeline
 │   └── run_eval.py              # Evaluation runner
-├── tests/                       # 121/121 passing
+├── tests/                       # 188/188 passing
 ├── eval/
 │   └── golden_dataset.json      # 10 items, 5 categories
 ├── .env.example                 # All configurable env vars
@@ -270,6 +275,21 @@ claude mcp add aged-care-standards -- \
 
 Honours `RAG_BACKEND=azure` like everything else. Offline tests in `tests/test_mcp_server.py`.
 
+## Urgent-situation safety routing
+
+Before retrieval, every question from the API, MCP `standards_ask`, the dashboard and the `Generator` itself passes through a rule-based check (`src/safety/triage.py`, patterns and wording in `config/safety_triage.yaml`). It looks for possible emergencies in three groups:
+
+- **Medical emergency:** chest pain or pressure, heart attack, stroke signs, not breathing, unresponsive, seizure, choking.
+- **Fall with head injury:** a fall together with a knock to the head, bleeding, drowsiness, confusion or blood thinners.
+- **Suspected elder abuse or neglect:** hitting, unexplained bruising, financial abuse, fear of a carer, sexual abuse, neglect.
+
+| Situation | Mode | What the user gets |
+|-----------|------|--------------------|
+| Happening now, or not clearly a policy question | `emergency` | Fixed guidance (call 000, healthdirect, 1800ELDERHelp, ACQSC). No retrieval, no LLM call, zero cost. |
+| Policy question on an urgent topic, no sign of a live event | `advisory` | Normal cited answer with a one-line safety note on top. |
+
+Any doubt resolves to `emergency`: a false positive costs a rephrase, a false negative could cost a life. `/query` responses carry `safety_mode` and `safety_categories`, and traces record them. Helpline numbers and clinical wording should be reviewed by a clinician before production use.
+
 ## Observability (you cannot govern what you cannot see)
 
 Every API `/query` and MCP `standards_ask` records one trace: per-stage spans (retrieve / generate), token usage, cost, top retrieval score, backend and status. JSONL sink at `data/traces/traces.jsonl` — no external service required; set `LANGFUSE_PUBLIC_KEY` to mirror traces to Langfuse.
@@ -292,7 +312,7 @@ The `data/` volume carries the ingested ChromaDB collection and BM25 index — r
 python -m pytest tests/ -v
 ```
 
-121/121 tests across 10 test suites: BM25 index, RRF fusion, reranker, hybrid retriever, evaluation metrics, API security, Azure store, BigQuery store, MCP server, tracing.
+Test suites: BM25 index, RRF fusion, reranker, hybrid retriever, evaluation metrics, API security, Azure store, BigQuery store, MCP server, tracing, safety triage.
 
 ## Configuration
 
